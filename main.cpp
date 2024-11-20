@@ -25,14 +25,14 @@ int main(int argc, char const *argv[])
     while (getline(in_stream, line))
     {
         printf("length %lu\n", line.length());
-        if (line.length() != 18)
+        if (line.length() != 16)
         {
             cout << line << " is not a valid instruction" << endl;
         }
         else
         {
             uint64_t temp = stoull(line, nullptr, 16);
-            printf("0x%016lx\n", temp);
+            printf("0x%016lX\n", temp);
         }
     }
     // getline(in_stream, c);

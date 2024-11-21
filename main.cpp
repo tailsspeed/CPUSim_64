@@ -24,6 +24,7 @@ int main(int argc, char const *argv[])
         exit(1);
     }
     string line;
+    /* FETCH */
     while (getline(in_stream, line))
     {
         printf("length %lu\n", line.length());
@@ -35,7 +36,10 @@ int main(int argc, char const *argv[])
         else
         {
             uint64_t temp = stoull(line, nullptr, 16);
-            printf("0x%016lX\n", temp);
+            /* DECODE */
+            uint64_t opcode = temp & 0xFFF0000000000000; // upper 12 bits
+            uint64_t format = temp & 0xF000000000000000; // upper 4 bits
+            printf("0x%016lX\n  Opcode: 0x%lX\n Format: 0x%lX\n", temp, opcode, format);
         }
     }
     CPU ts;

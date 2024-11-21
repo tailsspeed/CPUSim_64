@@ -1,7 +1,4 @@
 #include "ALU.h"
-// #define MEMORY_SIZE 1024
-
-// using namespace std;
 
 class CPU
 {

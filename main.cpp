@@ -72,8 +72,8 @@ int main(int argc, char const *argv[])
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
-                printf("%s could not be converted or exceeds 64-bit range\n", line.c_str());
+                std::cerr << e.what() << " - " << line <<" could not be converted or exceeds 64-bit range" << '\n';
+                // printf("%s could not be converted or exceeds 64-bit range\n", line.c_str());
             }
         }
     }

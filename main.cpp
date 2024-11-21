@@ -39,11 +39,11 @@ int main(int argc, char const *argv[])
             /* DECODE */
             uint64_t opcode = temp & 0xFFF0000000000000; // upper 12 bits
             uint64_t format = temp & 0xF000000000000000; // upper 4 bits
-            printf("0x%016lX\n  Opcode: 0x%lX\n Format: 0x%lX\n", temp, opcode, format);
+            printf("0x%016lX\n     Opcode: 0x%lX\n     Format: 0x%lX\n", temp, opcode, format);
         }
     }
     CPU ts;
-    ts.test_print();
+    // ts.test_print();
 
     // getline(in_stream, c);
     // cout << c << endl;

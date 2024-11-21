@@ -1,4 +1,4 @@
-// g++ -o main main.cpp
+// g++ -o main main.cpp CPU.cpp ALU.cpp 
 #include "CPU.h"
 
 // using namespace std;
@@ -80,20 +80,6 @@ int main(int argc, char const *argv[])
     CPU ts;
     // ts.test_print();
 
-    // getline(in_stream, c);
-    // cout << c << endl;
-    // if (c.length() != 16)
-    // {
-    //     cout << c << "is not a valid instruction" << endl;
-    //     exit(1);
-    // }
-    // string up = c.substr(0, 16);
-    // string down = c.substr(16, 32);
-    // cout << "up " << up << endl << "down " << down << endl;
-
-    // cout << "Value in hex: 0x" << hex << test << endl;
-    // test = test | stoull(down, nullptr, 16);
-    // cout << "Value in hex: 0x" << hex << test << endl;
     in_stream.close();
     return 0;
 }

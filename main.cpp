@@ -1,7 +1,7 @@
 // g++ -o main main.cpp
 #include "CPU.h"
 
-using namespace std;
+// using namespace std;
 
 int main(int argc, char const *argv[])
 {
@@ -38,6 +38,9 @@ int main(int argc, char const *argv[])
             printf("0x%016lX\n", temp);
         }
     }
+    CPU ts;
+    ts.test_print();
+
     // getline(in_stream, c);
     // cout << c << endl;
     // if (c.length() != 16)

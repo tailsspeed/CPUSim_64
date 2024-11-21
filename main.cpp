@@ -7,7 +7,8 @@ int main(int argc, char const *argv[])
 {
     for (size_t i = 0; i < argc; i++)
     {
-        cout << argv[i] << endl;
+        // cout << argv[i] << endl;
+        printf("%s\n", argv[i]);
     }
     if (argc != 2)
     {
@@ -18,7 +19,8 @@ int main(int argc, char const *argv[])
     in_stream.open(argv[1]);
     if (in_stream.fail())
     {
-        cout << "Could not open " << argv[1] << endl;
+        // cout << "Could not open " << argv[1] << endl;
+        printf("Could not open %s\n", argv[1]);
         exit(1);
     }
     string line;
@@ -27,7 +29,8 @@ int main(int argc, char const *argv[])
         printf("length %lu\n", line.length());
         if (line.length() != 16)
         {
-            cout << line << " is not a valid instruction" << endl;
+            // cout << line << " is not a valid instruction" << endl;
+            printf("%s is not a valid instruction\n", line.c_str()); // .c_str() returns pointer to C-style string
         }
         else
         {

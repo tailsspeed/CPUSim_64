@@ -16,8 +16,6 @@ private:
 public:
     ALU(/* args */);
     ~ALU();
-    // uint128_t adc(uint128_t dest, uint128_t src);
-    // uint128_t adc(uint128_t dest, uint128_t src);
     /*
     adc
     add

@@ -56,7 +56,7 @@ int main(int argc, char const *argv[])
                         printf("Register->Register\n");
                         uint64_t dest = (temp << 12) >> 56;
                         uint64_t src = (temp << 20) >> 56;
-                        printf("Type: %lX\n    Dest: %lX\n    Src: %lX\n", inst_type, dest, src);
+                        printf("Type: 0x%lX\n    Dest: 0x%lX\n    Src: 0x%lX\n", inst_type, dest, src);
                         break;
                     }
                 case 0xB:
@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
                         printf("Register->Memory\n");
                         uint64_t src = (temp << 12) >> 56;
                         uint64_t dest_mem = (temp << 20) >> 32;
-                        printf("Type: %lX\n    Src: %lX\n    Dest Mem: %lX\n", inst_type, src, dest_mem);
+                        printf("Type: 0x%lX\n    Src: 0x%lX\n    Dest Mem: 0x%lX\n", inst_type, src, dest_mem);
                         break;
                     }
                     break;
@@ -73,7 +73,7 @@ int main(int argc, char const *argv[])
                         printf("Memory->Register\n");
                         uint64_t src_mem = (temp << 12) >> 32;
                         uint64_t dest = (temp << 44) >> 56;
-                        printf("Type: %lX\n    Src Mem: %lX\n    Dest: %lX\n", inst_type, src_mem, dest);
+                        printf("Type: 0x%lX\n    Src Mem: 0x%lX\n    Dest: 0x%lX\n", inst_type, src_mem, dest);
                     }
                     break;
                 case 0xD:
@@ -81,14 +81,14 @@ int main(int argc, char const *argv[])
                         printf("Immediate->Register\n");
                         uint64_t imm = (temp << 12) >> 32;
                         uint64_t dest = (temp << 44) >> 56;
-                        printf("Type: %lX\n    Imm: %lX\n    Dest: %lX\n", inst_type, imm, dest);
+                        printf("Type: 0x%lX\n    Imm: 0x%lX\n    Dest: 0x%lX\n", inst_type, imm, dest);
                     }
                     break;
                 case 0xE:
                     {
                         printf("Jump\n");
                         uint64_t addr = (temp << 12) >> 32;
-                        printf("Type: %lX\n    Addr: %lX\n", inst_type, addr);
+                        printf("Type: 0x%lX\n    Addr: 0x%lX\n", inst_type, addr);
                     }
                     break;
                 default:

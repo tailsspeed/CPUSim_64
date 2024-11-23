@@ -1,7 +1,27 @@
 // g++ -o main main.cpp CPU.cpp ALU.cpp 
 #include "CPU.h"
 
+
+//Variables
+uint64_t reg[256]; //Our registers
+
+
 // using namespace std;
+
+uint64_t Opcode(string instruction);
+
+//RegisterToRegister related functions 0xA
+uint64_t RegisterToRegister(uint64_t instruction);
+uint64_t MOVRegister(int Source, int Destination);
+
+
+//ImmediateToRegister related functions 0xD
+uint64_t ImmediateToRegister(uint64_t instruction); //Opcode D
+uint64_t MOVImmediate(uint64_t Immediate, int SelectedRegister);
+//void DumpRegs();
+
+
+
 
 int main(int argc, char const *argv[])
 {
@@ -28,21 +48,42 @@ int main(int argc, char const *argv[])
     while (getline(in_stream, line))
     {
         printf("length %lu\n", line.length());
-        if (line.length() != 16)
+        if (line.length() > 16)
         {
             // cout << line << " is not a valid instruction" << endl;
             printf("%s is too many hex digits\n", line.c_str()); // .c_str() returns pointer to C-style string
         }
+		else if(line.length() < 16)
+		{
+			printf("%s is too few hex digits\n", line.c_str());	
+		}
         else
         {
-            try
+           Opcode(line); 
+        }
+    }
+    CPU ts;
+    // ts.test_print();
+    //DumpRegs();
+	cout << "Register 5 is " << hex <<  reg[5] << endl;
+	cout << "Register 4 is " << hex << reg[4] << endl;
+
+    in_stream.close();
+    return 0;
+}
+
+uint64_t Opcode(string instruction)
+{
+	uint64_t OpcodeResult=0; //Result of whatever operation was done.
+			try
             {
                 /*
                 stoull throws exception when argument is not in hex or exceeds range
                     ex. terminate called after throwing an instance of 'std::invalid_argument'
                         what():  stoull
                  */
-                uint64_t temp = stoull(line, nullptr, 16);
+                uint64_t temp = stoull(instruction, nullptr, 16);
+                uint64_t full = temp; //Save the full instruction
                 /* DECODE */
                 uint64_t opcode = temp & 0xFFF0000000000000; // upper 12 bits
                 // uint64_t format = temp & 0xF000000000000000; // upper 4 bits
@@ -57,6 +98,7 @@ int main(int argc, char const *argv[])
                         uint64_t dest = (temp << 12) >> 56;
                         uint64_t src = (temp << 20) >> 56;
                         printf("Type: 0x%lX\n    Dest: 0x%lX\n    Src: 0x%lX\n", inst_type, dest, src);
+                        OpcodeResult=RegisterToRegister(full);
                         break;
                     }
                 case 0xB:
@@ -82,6 +124,7 @@ int main(int argc, char const *argv[])
                         uint64_t imm = (temp << 12) >> 32;
                         uint64_t dest = (temp << 44) >> 56;
                         printf("Type: 0x%lX\n    Imm: 0x%lX\n    Dest: 0x%lX\n", inst_type, imm, dest);
+                        OpcodeResult=ImmediateToRegister(full);
                     }
                     break;
                 case 0xE:
@@ -98,14 +141,90 @@ int main(int argc, char const *argv[])
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << " - " << line <<" could not be converted or exceeds 64-bit range" << '\n';
+                std::cerr << e.what() << " - " << instruction <<" could not be converted or exceeds 64-bit range" << '\n';
                 // printf("%s could not be converted or exceeds 64-bit range\n", line.c_str());
             }
-        }
-    }
-    CPU ts;
-    // ts.test_print();
-
-    in_stream.close();
-    return 0;
+	
+	return OpcodeResult;
 }
+
+//A instructions
+uint64_t RegisterToRegister(uint64_t instruction)
+{
+	uint64_t temp = (instruction & 0xFFF0000000000000)>>52;	
+	uint64_t TheRest = (instruction & 0x000FFFF000000000) >> 36;
+	int Source = (TheRest & 0xFF00) >> 8;
+	int Destination = TheRest & 0xFF;
+	
+	
+	uint64_t RegisterToRegisterResult=0; //Whatever value was transferred to the register
+	switch(temp)
+	{
+		case  0xA01:
+			printf("MOV register instruction detected! \n");
+			RegisterToRegisterResult=MOVRegister(Source,Destination);
+			break;
+		default:
+			printf("Oops! Unimplemented instruction! \n");
+	}
+	
+	return RegisterToRegisterResult;
+}
+
+
+
+uint64_t MOVRegister(int Source, int Destination)
+{
+	reg[Destination]=reg[Source];
+	return reg[Destination];
+}
+
+
+//D instructions
+uint64_t ImmediateToRegister(uint64_t instruction)
+{
+	uint64_t temp = (instruction & 0xFFF0000000000000)>>52;	
+	uint64_t TheRest = (instruction & 0x000FFFFFFFFFF000) >> 12;
+	int SelectedRegister = TheRest & 0xFF; 
+	uint64_t Immediate = (TheRest & 0xFFFFFFFF00) >> 8;
+	//cout << "The selected register is " << SelectedRegister << endl;
+	//cout << "The immediate is " << hex << Immediate << endl;
+	uint64_t ImmediateToRegisterResult=0; //Whatever value was transferred to the register	
+	switch(temp)
+	{
+	case 0xD01:
+		printf("MOV immediate instruction detected! \n");
+		ImmediateToRegisterResult=MOVImmediate(Immediate, SelectedRegister);
+		break;
+	default:
+		printf("Oops! Unimplemented instruction \n");
+	}
+	return ImmediateToRegisterResult;
+}
+
+uint64_t MOVImmediate(uint64_t Immediate, int SelectedRegister)
+{
+	reg[SelectedRegister] = Immediate;
+	return Immediate;
+}
+
+/* Trash
+void DumpRegs()
+{
+	cout << "Register contents:";
+	for(int i=0; i<32; i++)
+	{
+		for(int j=0; j<8; j++)
+		{
+			cout << " R " << j*(i+0) << hex << reg[j*(i+0)]; 
+			cout << " R " << j*(i+1) << hex << reg[j*(i+1)]; 
+			cout << " R " << j*(i+2) << hex << reg[j*(i+2)]; 
+			cout << " R " << j*(i+3) << hex << reg[j*(i+3)]; 
+			cout << " R " << j*(i+4) << hex << reg[j*(i+4)]; 
+			cout << " R " << j*(i+5) << hex << reg[j*(i+5)]; 
+			cout << " R " << j*(i+6) << hex << reg[j*(i+6)];
+			cout << " R " << j*(i+7) << hex << reg[j*(i+7)];  
+		}
+		cout << endl;
+	}
+}*/

@@ -15,7 +15,14 @@ public:
 
 //abstract method
 private:
-   
+    uint64_t add(uint64_t num1, uint64_t num2);
+    uint64_t subtract(uint64_t num1, uint64_t num2);
+    uint64_t multiply(uint64_t num1, uint64_t num2);
+    uint64_t bitwise_and(uint64_t num1, uint64_t num2);
+    uint64_t bitwise_or(uint64_t num1, uint64_t num2);
+    uint64_t bitwise_xor(uint64_t num1, uint64_t num2);
+    uint64_t shift_left(uint64_t num1, uint64_t num2);
+    uint64_t shift_right(uint64_t num1, uint64_t num2);
 };
 
 #endif

@@ -24,3 +24,35 @@ uint64_t ALU::execute(uint64_t opcode, uint64_t operand1, uint64_t operand2) {
     }
 }
 
+uint64_t ALU::add(uint64_t num1, uint64_t num2) {
+    return num1 + num2;
+}
+
+uint64_t ALU::subtract(uint64_t num1, uint64_t num2) {
+    return num1 - num2;
+}
+
+uint64_t ALU::multiply(uint64_t num1, uint64_t num2) {
+    return num1 * num2;
+}
+
+uint64_t ALU::bitwise_and(uint64_t num1, uint64_t num2) {
+    return num1 & num2;
+}
+
+uint64_t ALU::bitwise_or(uint64_t num1, uint64_t num2) {
+    return num1 | num2;
+}
+
+uint64_t ALU::bitwise_xor(uint64_t num1, uint64_t num2) {
+    return num1 ^ num2;
+}
+
+uint64_t ALU::shift_left(uint64_t num1, uint64_t num2) {
+    return num1 << num2;
+}
+
+uint64_t ALU::shift_right(uint64_t num1, uint64_t num2) {
+    return num1 >> num2;
+}
+

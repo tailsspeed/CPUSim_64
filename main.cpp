@@ -97,7 +97,7 @@ uint64_t Opcode(string instruction)
                         printf("Register->Register\n");
                         uint64_t dest = (temp << 12) >> 56;
                         uint64_t src = (temp << 20) >> 56;
-                        printf("Type: 0x%lX\n    Dest: 0x%lX\n    Src: 0x%lX\n", inst_type, dest, src);
+                        printf("Type: 0x%lX\n    Dest: 0x%lX\n    Src: 0x%lX\n", inst_type, src, dest);
                         OpcodeResult=RegisterToRegister(full);
                         break;
                     }

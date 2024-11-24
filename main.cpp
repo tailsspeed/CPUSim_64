@@ -12,19 +12,24 @@ uint64_t Opcode(string instruction);
 
 //RegisterToRegister related functions 0xA
 uint64_t RegisterToRegister(uint64_t instruction);
-uint64_t MOVRegister(int Source, int Destination);
+uint64_t MOVRegister(int Src, int Dst); //0xA01
+uint64_t ADDRegister(int Src, int Dst); //0xA02
 
 
 //ImmediateToRegister related functions 0xD
 uint64_t ImmediateToRegister(uint64_t instruction); //Opcode D
 uint64_t MOVImmediate(uint64_t Immediate, int SelectedRegister);
+uint64_t ADDImmediate(uint64_t Immediate, int SelectedRegister);
+
+
 //void DumpRegs();
-
-
+void InitRegs();
+void ReportNonZero();
 
 
 int main(int argc, char const *argv[])
 {
+	InitRegs();
     for (size_t i = 0; i < argc; i++)
     {
         // cout << argv[i] << endl;
@@ -65,8 +70,7 @@ int main(int argc, char const *argv[])
     CPU ts;
     // ts.test_print();
     //DumpRegs();
-	cout << "Register 5 is " << hex <<  reg[5] << endl;
-	cout << "Register 4 is " << hex << reg[4] << endl;
+	ReportNonZero();
 
     in_stream.close();
     return 0;
@@ -153,22 +157,26 @@ uint64_t RegisterToRegister(uint64_t instruction)
 {
 	uint64_t temp = (instruction & 0xFFF0000000000000)>>52;	
 	uint64_t TheRest = (instruction & 0x000FFFF000000000) >> 36;
-	int Source = (TheRest & 0xFF00) >> 8;
-	int Destination = TheRest & 0xFF;
+	int Src = (TheRest & 0xFF00) >> 8; //Source
+	int Dst = TheRest & 0xFF; //Destination
 	
 	
-	uint64_t RegisterToRegisterResult=0; //Whatever value was transferred to the register
+	uint64_t Reg2Reg=0; //Whatever value was transferred to the register
 	switch(temp)
 	{
 		case  0xA01:
 			printf("MOV register instruction detected! \n");
-			RegisterToRegisterResult=MOVRegister(Source,Destination);
+			Reg2Reg=MOVRegister(Src,Dst);
+			break;
+		case 0xA02:
+			printf("ADD register instruction detected! \n");
+			Reg2Reg=ADDRegister(Src,Dst);
 			break;
 		default:
 			printf("Oops! Unimplemented instruction! \n");
 	}
 	
-	return RegisterToRegisterResult;
+	return Reg2Reg;
 }
 
 
@@ -179,33 +187,52 @@ uint64_t MOVRegister(int Source, int Destination)
 	return reg[Destination];
 }
 
+uint64_t ADDRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Src]+reg[Dst];
+	return reg[Dst];
+}
+
 
 //D instructions
 uint64_t ImmediateToRegister(uint64_t instruction)
 {
 	uint64_t temp = (instruction & 0xFFF0000000000000)>>52;	
 	uint64_t TheRest = (instruction & 0x000FFFFFFFFFF000) >> 12;
-	int SelectedRegister = TheRest & 0xFF; 
-	uint64_t Immediate = (TheRest & 0xFFFFFFFF00) >> 8;
+	
+	int Sel = TheRest & 0xFF; //Selected Register
+	uint64_t Imm = (TheRest & 0xFFFFFFFF00) >> 8; //Immediate
 	//cout << "The selected register is " << SelectedRegister << endl;
 	//cout << "The immediate is " << hex << Immediate << endl;
-	uint64_t ImmediateToRegisterResult=0; //Whatever value was transferred to the register	
+	
+	uint64_t Imm2Reg=0; //Whatever value was transferred to the register
+		
 	switch(temp)
 	{
 	case 0xD01:
 		printf("MOV immediate instruction detected! \n");
-		ImmediateToRegisterResult=MOVImmediate(Immediate, SelectedRegister);
+		Imm2Reg=MOVImmediate(Imm, Sel);
+		break;
+	case 0xD02:
+		printf("ADD immediate instruction detected! \n");
+		Imm2Reg=ADDImmediate(Imm, Sel);
 		break;
 	default:
 		printf("Oops! Unimplemented instruction \n");
 	}
-	return ImmediateToRegisterResult;
+	return Imm2Reg;
 }
 
 uint64_t MOVImmediate(uint64_t Immediate, int SelectedRegister)
 {
 	reg[SelectedRegister] = Immediate;
 	return Immediate;
+}
+
+uint64_t ADDImmediate(uint64_t Immediate, int SelectedRegister)
+{
+	reg[SelectedRegister] = reg[SelectedRegister] + Immediate;
+	return reg[SelectedRegister];
 }
 
 /* Trash
@@ -228,3 +255,24 @@ void DumpRegs()
 		cout << endl;
 	}
 }*/
+
+void InitRegs()
+{
+	//Initialize all registers after 0xA to zero
+	for (int i=11; i<256; i++)
+	{
+		reg[i]=0;
+	}
+}
+
+//Function that prints general purpose registers that aren't 0
+void ReportNonZero()
+{
+	for (int i=11; i<256; i++)
+	{
+		if(reg[i]!=0)
+		{
+			cout << "Register " << i << " has a value of " << hex << reg[i] << endl;
+		}
+	}
+}

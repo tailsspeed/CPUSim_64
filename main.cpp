@@ -17,6 +17,13 @@ uint64_t ADDRegister(int Src, int Dst); //0xA02
 uint64_t SUBRegister(int Src, int Dst); //0xA03
 uint64_t MULRegister(int Src, int Dst); //0xA04
 uint64_t DIVRegister(int Src, int Dst); //0xA05
+uint64_t ANDRegister(int Src, int Dst); //0xA06
+uint64_t ORRegister(int Src, int Dst);  //0xA07
+uint64_t INC(int Dst); 					//0xA08
+uint64_t DEC(int Dst); 					//0xA09
+uint64_t SHLRegister(int Src, int Dst); //0xA0A
+uint64_t SHRRegister(int Src, int Dst); //0xA0B
+
 
 
 //ImmediateToRegister related functions 0xD
@@ -26,7 +33,10 @@ uint64_t ADDImmediate(uint64_t Imm, int Sel); //0xD02
 uint64_t SUBImmediate(uint64_t Imm, int Sel); //0xD03
 uint64_t MULImmediate(uint64_t Imm, int Sel); //0xD04
 uint64_t DIVImmediate(uint64_t Imm, int Sel); //0xD05
-
+uint64_t ANDImmediate(uint64_t Imm, int Sel); //0xD06
+uint64_t ORImmediate(uint64_t Imm, int Sel);  //0xD07
+uint64_t SHLImmediate(uint64_t Imm, int Sel); //0xD0A (I'm keeping the lower part of opcode the same as Reg2Reg for consistency)
+uint64_t SHRImmediate(uint64_t Imm, int Sel); //0xD0B
 
 //void DumpRegs();
 void InitRegs();
@@ -190,7 +200,30 @@ uint64_t RegisterToRegister(uint64_t instruction)
 			printf("DIV register instruction detected! \n");
 			Reg2Reg=DIVRegister(Src,Dst);
 			break;
-			
+		case 0xA06:
+			printf("AND register \n");
+			Reg2Reg=ANDRegister(Src,Dst);
+			break;
+		case 0xA07:
+			printf("OR register \n");
+			Reg2Reg=ORRegister(Src,Dst);
+			break;
+		case 0xA08:
+			printf("Increment register \n");
+			Reg2Reg=INC(Dst);
+			break;
+		case 0xA09:
+			printf("Decrement register \n");
+			Reg2Reg=DEC(Dst);
+			break;
+		case 0xA0A:
+			printf("SHL register \n");
+			Reg2Reg=SHLRegister(Src,Dst);
+			break;
+		case 0xA0B:
+			printf("SHR register \n");
+			Reg2Reg=SHRRegister(Src,Dst);
+			break;
 		default:
 			printf("Oops! Unimplemented instruction! \n");
 	}
@@ -230,6 +263,41 @@ uint64_t DIVRegister(int Src, int Dst)
 	return reg[Dst];
 }
 
+uint64_t ANDRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Src] and reg[Dst];
+	return reg[Dst];	
+}
+
+uint64_t ORRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Src] or reg[Dst];
+	return reg[Dst];
+}
+
+uint64_t INC(int Dst)
+{
+	reg[Dst]++;
+	return reg[Dst];
+}
+
+uint64_t DEC(int Dst)
+{
+	reg[Dst]--;
+	return reg[Dst];
+}
+
+uint64_t SHLRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Dst] << reg[Src];
+	return reg[Dst];
+}
+
+uint64_t SHRRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Dst] >> reg[Src];
+	return reg[Dst];
+}
 
 //D instructions
 uint64_t ImmediateToRegister(uint64_t instruction)
@@ -266,6 +334,22 @@ uint64_t ImmediateToRegister(uint64_t instruction)
 		printf("DIV immediate instruction detected! \n");
 		Imm2Reg=DIVImmediate(Imm, Sel);
 		break;
+	case 0xD06:
+		printf("AND immediate \n");
+		Imm2Reg=ANDImmediate(Imm, Sel);
+		break;
+	case 0xD07:
+		printf("OR immediate \n");
+		Imm2Reg=ORImmediate(Imm, Sel);
+		break;
+	case 0xD0A:
+		printf("SHL immediate \n");
+		Imm2Reg=SHLImmediate(Imm, Sel);
+		break;
+	case 0xD0B:
+		printf("SHR immediate \n");
+		Imm2Reg=SHRImmediate(Imm, Sel);
+		break;
 	default:
 		printf("Oops! Unimplemented instruction \n");
 	}
@@ -299,6 +383,30 @@ uint64_t MULImmediate(uint64_t Imm, int Sel)
 uint64_t DIVImmediate(uint64_t Imm, int Sel)
 {
 	reg[Sel] = reg[Sel] / Imm;
+	return reg[Sel];
+}
+
+uint64_t ANDImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] and Imm;
+	return reg[Sel];
+}
+
+uint64_t ORImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] or Imm;
+	return reg[Sel];
+}
+
+uint64_t SHLImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] << Imm;
+	return reg[Sel];
+}
+
+uint64_t SHRImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] >> Imm;
 	return reg[Sel];
 }
 

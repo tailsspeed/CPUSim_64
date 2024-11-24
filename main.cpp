@@ -14,12 +14,18 @@ uint64_t Opcode(string instruction);
 uint64_t RegisterToRegister(uint64_t instruction);
 uint64_t MOVRegister(int Src, int Dst); //0xA01
 uint64_t ADDRegister(int Src, int Dst); //0xA02
+uint64_t SUBRegister(int Src, int Dst); //0xA03
+uint64_t MULRegister(int Src, int Dst); //0xA04
+uint64_t DIVRegister(int Src, int Dst); //0xA05
 
 
 //ImmediateToRegister related functions 0xD
 uint64_t ImmediateToRegister(uint64_t instruction); //Opcode D
-uint64_t MOVImmediate(uint64_t Immediate, int SelectedRegister);
-uint64_t ADDImmediate(uint64_t Immediate, int SelectedRegister);
+uint64_t MOVImmediate(uint64_t Imm, int Sel); //0xD01
+uint64_t ADDImmediate(uint64_t Imm, int Sel); //0xD02
+uint64_t SUBImmediate(uint64_t Imm, int Sel); //0xD03
+uint64_t MULImmediate(uint64_t Imm, int Sel); //0xD04
+uint64_t DIVImmediate(uint64_t Imm, int Sel); //0xD05
 
 
 //void DumpRegs();
@@ -172,6 +178,19 @@ uint64_t RegisterToRegister(uint64_t instruction)
 			printf("ADD register instruction detected! \n");
 			Reg2Reg=ADDRegister(Src,Dst);
 			break;
+		case 0xA03:
+			printf("SUB register instruction detected! \n");
+			Reg2Reg=SUBRegister(Src,Dst);
+			break;
+		case 0xA04:
+			printf("MUL register instruction detected! \n");
+			Reg2Reg=MULRegister(Src,Dst);
+			break;
+		case 0xA05:
+			printf("DIV register instruction detected! \n");
+			Reg2Reg=DIVRegister(Src,Dst);
+			break;
+			
 		default:
 			printf("Oops! Unimplemented instruction! \n");
 	}
@@ -190,6 +209,24 @@ uint64_t MOVRegister(int Source, int Destination)
 uint64_t ADDRegister(int Src, int Dst)
 {
 	reg[Dst]=reg[Src]+reg[Dst];
+	return reg[Dst];
+}
+
+uint64_t SUBRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Src]-reg[Dst];
+	return reg[Dst];
+}
+
+uint64_t MULRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Src]*reg[Dst];
+	return reg[Dst];
+}
+
+uint64_t DIVRegister(int Src, int Dst)
+{
+	reg[Dst]=reg[Src]/reg[Dst];
 	return reg[Dst];
 }
 
@@ -217,22 +254,52 @@ uint64_t ImmediateToRegister(uint64_t instruction)
 		printf("ADD immediate instruction detected! \n");
 		Imm2Reg=ADDImmediate(Imm, Sel);
 		break;
+	case 0xD03:
+		printf("SUB immediate instruction detected! \n");
+		Imm2Reg=SUBImmediate(Imm, Sel);
+		break;
+	case 0xD04:
+		printf("MUL immediate instruction detected! \n");
+		Imm2Reg=MULImmediate(Imm, Sel);
+		break;
+	case 0xD05:
+		printf("DIV immediate instruction detected! \n");
+		Imm2Reg=DIVImmediate(Imm, Sel);
+		break;
 	default:
 		printf("Oops! Unimplemented instruction \n");
 	}
 	return Imm2Reg;
 }
 
-uint64_t MOVImmediate(uint64_t Immediate, int SelectedRegister)
+uint64_t MOVImmediate(uint64_t Imm, int Sel)
 {
-	reg[SelectedRegister] = Immediate;
-	return Immediate;
+	reg[Sel] = Imm;
+	return reg[Sel];
 }
 
-uint64_t ADDImmediate(uint64_t Immediate, int SelectedRegister)
+uint64_t ADDImmediate(uint64_t Imm, int Sel)
 {
-	reg[SelectedRegister] = reg[SelectedRegister] + Immediate;
-	return reg[SelectedRegister];
+	reg[Sel] = reg[Sel] + Imm;
+	return reg[Sel];
+}
+
+uint64_t SUBImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] - Imm;
+	return reg[Sel];
+}
+
+uint64_t MULImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] * Imm;
+	return reg[Sel];
+}
+
+uint64_t DIVImmediate(uint64_t Imm, int Sel)
+{
+	reg[Sel] = reg[Sel] / Imm;
+	return reg[Sel];
 }
 
 /* Trash
@@ -272,7 +339,7 @@ void ReportNonZero()
 	{
 		if(reg[i]!=0)
 		{
-			cout << "Register " << i << " has a value of " << hex << reg[i] << endl;
+			cout << "Register " << hex << i << " has a value of " << reg[i] << endl;
 		}
 	}
 }

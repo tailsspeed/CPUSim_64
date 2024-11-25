@@ -104,7 +104,24 @@ int main(int argc, char const *argv[])
         }
     }
     CPU ts;
-    // ts.test_print();
+    ts.test_print();
+    // ts.au.clc();
+    ts.au.std();
+    ts.test_print();
+    ts.au.sti();
+    ts.test_print();
+    ts.au.stc();
+    ts.test_print();
+    ts.au.clc();
+    ts.test_print();
+    ts.au.cld();
+    ts.test_print();
+    ts.au.cli();
+    ts.test_print();
+    ts.au.std();
+    ts.test_print();
+    ts.au.cmc();
+    ts.test_print();
 
     in_stream.close();
     return 0;

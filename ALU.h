@@ -12,10 +12,28 @@ using namespace std;
 class ALU
 {
 private:
-    /* data */
+    uint64_t *reg_ptr; // pointer to the CPU's registers
 public:
-    ALU(/* args */);
+    ALU();
+    ALU(uint64_t reg[]);
     ~ALU();
+    /* FLAG Instructions */
+    void clc(); // clear carry flag
+    void cld(); // clear direction flag
+    void cli(); // clear interrupt flag
+    void cmc(); // complement carry flag
+    void stc(); // set carry flag
+    void std(); // set direction flag
+    void sti(); // set interrupt flag
+    /* Helper functions to set flags during arithmetic */
+    void set_overflow();
+    void clear_overflow();
+    void set_sign();
+    void clear_sign();
+    void set_zero();
+    void clear_zero();
+    void set_parity();
+    void clear_parity();
     /*
     adc
     add

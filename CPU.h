@@ -4,9 +4,9 @@ class CPU
 {
 private:
     uint64_t reg[256];
-    ALU au;
     uint64_t mem[MEMORY_SIZE]; // could be declared in a seperate file as its own class
 public:
+    ALU au = ALU(reg);
     CPU(/* external memory, ifstream? */);
     void test_print();
     /*

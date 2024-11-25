@@ -2,6 +2,7 @@
 
 CPU::CPU(/* args */)
 {
+    
 }
 
 CPU::~CPU()
@@ -10,5 +11,5 @@ CPU::~CPU()
 
 void CPU::test_print()
 {
-    cout << "Test" << endl;
+    cout << hex << reg[255] << endl;
 }

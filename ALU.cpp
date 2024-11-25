@@ -46,3 +46,47 @@ void ALU::sti()
 {
     reg_ptr[255] = reg_ptr[255] | 0x0000000000000200;
 }
+
+/* overflow flag */
+void ALU::set_overflow()
+{
+    reg_ptr[255] = reg_ptr[255] | 0x0000000000000800;
+}
+
+void ALU::clear_overflow()
+{
+    reg_ptr[255] = reg_ptr[255] & 0xFFFFFFFFFFFFF7FF;
+}
+
+/* sign flag */
+void ALU::set_sign()
+{
+    reg_ptr[255] = reg_ptr[255] | 0x0000000000000080;
+}
+
+void ALU::clear_sign()
+{
+    reg_ptr[255] = reg_ptr[255] & 0xFFFFFFFFFFFFFF7F;
+}
+
+/* zero flag */
+void ALU::set_zero()
+{
+    reg_ptr[255] = reg_ptr[255] | 0x0000000000000040;
+}
+
+void ALU::clear_zero()
+{
+    reg_ptr[255] = reg_ptr[255] & 0xFFFFFFFFFFFFFFBF;
+}
+
+/* parity flag */
+void ALU::set_parity()
+{
+    reg_ptr[255] = reg_ptr[255] | 0x0000000000000004;
+}
+
+void ALU::clear_parity()
+{
+    reg_ptr[255] = reg_ptr[255] & 0xFFFFFFFFFFFFFFFB;
+}

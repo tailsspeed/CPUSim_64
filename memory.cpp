@@ -44,3 +44,14 @@ struct m6502::Mem
 	}
 };
 
+struct m6502::StatusFlags
+{	
+	Byte C : 1;	// Carry Flag	
+	Byte Z : 1;	//Zero Flag
+	Byte I : 1; //Interrupt disable
+	Byte D : 1; //Decimal mode
+	Byte B : 1; //Break
+	Byte Unused : 1; //Unused
+	Byte V : 1; //Overflow
+	Byte N : 1; //Negative
+};

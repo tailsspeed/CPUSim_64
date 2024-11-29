@@ -225,14 +225,14 @@ void WriteMem(int Src, int Dst)
 uint64_t ReadMem(int Src, int Dst)
 {
 	uint64_t Cargo = reg[Src];
-	Cargo =   (((uint64_t)Mem[Dst] >> 56) & 0xFF00000000000000)
-			| (((uint64_t)Mem[Dst+1] >> 48) & 0x00FF000000000000)
-			| (((uint64_t)Mem[Dst+2] >> 40) & 0x0000FF0000000000)
-			| (((uint64_t)Mem[Dst+3] >> 32) & 0x000000FF00000000)
-			| (((uint64_t)Mem[Dst+4] >> 24) & 0x00000000FF000000)
-			| (((uint64_t)Mem[Dst+5] >> 16) & 0x0000000000FF0000)
-			| (((uint64_t)Mem[Dst+6] >>  8) & 0x000000000000FF00)
-			| (((uint64_t)Mem[Dst+7]      ) & 0x00000000000000FF);
+	Cargo =   ((uint64_t)Mem[Dst+7] << 56)
+            | ((uint64_t)Mem[Dst+6] << 48)
+            | ((uint64_t)Mem[Dst+5] << 40)
+            | ((uint64_t)Mem[Dst+4] << 32)
+            | ((uint64_t)Mem[Dst+3] << 24)
+            | ((uint64_t)Mem[Dst+2] << 16)
+            | ((uint64_t)Mem[Dst+1] <<  8)
+            | ((uint64_t)Mem[Dst+0]);
 	return Cargo;
 }
 

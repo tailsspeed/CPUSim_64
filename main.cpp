@@ -2,8 +2,17 @@
 #include "CPU.h"
 
 
+using Byte = unsigned char;
+using Word = unsigned short;
+using DWord = unsigned int;
+using QWord = uint64_t;
+
 //Variables
 uint64_t reg[256]; //Our registers
+
+//Memory
+static constexpr uint64_t MAX_MEM = 0xFFFFFF; //Arbitrary amount of RAM. This is 16MB. Kept it low so it doesn't take long
+Byte* Mem = (Byte*)malloc(MAX_MEM);
 
 
 // using namespace std;
@@ -24,7 +33,14 @@ uint64_t DEC(int Dst); 					//0xA09
 uint64_t SHLRegister(int Src, int Dst); //0xA0A
 uint64_t SHRRegister(int Src, int Dst); //0xA0B
 
+//RegisterToMemory related functions 0xB
+uint64_t RegisterToMemory(uint64_t instruction);
+void WriteMem(int Src, int Dst);
+uint64_t ReadMem(int Stc, int Dst);
+uint64_t ReadQWord(int Dst); //To check if I did it right
+uint64_t MOVReg2Mem(int Src, int Dst);
 
+//MemoryToRegister related functions 0xC
 
 //ImmediateToRegister related functions 0xD
 uint64_t ImmediateToRegister(uint64_t instruction); //Opcode D
@@ -89,6 +105,9 @@ int main(int argc, char const *argv[])
 	ReportNonZero();
 
     in_stream.close();
+    
+    cout <<  ReadQWord(0xFEED) << endl;
+    cout << "Damn! " << int(Mem[0xFEED]) << int(Mem[0xFEED+1]) << endl;
     return 0;
 }
 
@@ -127,6 +146,7 @@ uint64_t Opcode(string instruction)
                         uint64_t src = (temp << 12) >> 56;
                         uint64_t dest_mem = (temp << 20) >> 32;
                         printf("Type: 0x%lX\n    Src: 0x%lX\n    Dest Mem: 0x%lX\n", inst_type, src, dest_mem);
+                        OpcodeResult=RegisterToMemory(full);
                         break;
                     }
                     break;
@@ -166,6 +186,71 @@ uint64_t Opcode(string instruction)
             }
 	
 	return OpcodeResult;
+}
+
+
+//Writing to Memory
+void WriteMem(int Src, int Dst)
+{
+	uint64_t Cargo = reg[Src];
+	Byte l7 = (Cargo >> 000) & 0xFF;  //Lol these are in octal. I found this off stack overflow.
+	Byte l6 = (Cargo >> 010) & 0xFF;  //Hex would work too but it's funny looking at this.
+	Byte l5 = (Cargo >> 020) & 0xFF;
+	Byte l4 = (Cargo >> 030) & 0xFF;
+	Byte l3 = (Cargo >> 040) & 0xFF;
+	Byte l2 = (Cargo >> 050) & 0xFF;
+	Byte l1 = (Cargo >> 060) & 0xFF;
+	Byte l0 = (Cargo >> 070) & 0xFF;
+	
+	Mem[Dst] = l7;
+	Mem[Dst+1] = l6;
+	Mem[Dst+2] = l5;
+	Mem[Dst+3] = l4;
+	Mem[Dst+4] = l3;
+	Mem[Dst+5] = l2;
+	Mem[Dst+6] = l1;
+	Mem[Dst+7] = l0;
+	cout << "We are messing with register " << hex << Src << endl;
+	cout << "Cargo is " << hex << Cargo << endl;
+	cout << "Mem0 is " << hex << int(Mem[Dst]) << endl;
+	cout << "Mem1 is " << hex << int(Mem[Dst+1]) << endl;
+	cout << "Mem2 is " << hex << int(Mem[Dst+2]) << endl;
+	cout << "Mem3 is " << hex << int(Mem[Dst+3]) << endl;
+	cout << "Mem4 is " << hex << int(Mem[Dst+4]) << endl;
+	cout << "Mem5 is " << hex << int(Mem[Dst+5]) << endl;
+	cout << "Mem6 is " << hex << int(Mem[Dst+6]) << endl;
+	cout << "Mem7 is " << hex << int(Mem[Dst+7]) << endl;
+}
+
+uint64_t ReadMem(int Src, int Dst)
+{
+	uint64_t Cargo = reg[Src];
+	Cargo =   (((uint64_t)Mem[Dst] >> 56) & 0xFF00000000000000)
+			| (((uint64_t)Mem[Dst+1] >> 48) & 0x00FF000000000000)
+			| (((uint64_t)Mem[Dst+2] >> 40) & 0x0000FF0000000000)
+			| (((uint64_t)Mem[Dst+3] >> 32) & 0x000000FF00000000)
+			| (((uint64_t)Mem[Dst+4] >> 24) & 0x00000000FF000000)
+			| (((uint64_t)Mem[Dst+5] >> 16) & 0x0000000000FF0000)
+			| (((uint64_t)Mem[Dst+6] >>  8) & 0x000000000000FF00)
+			| (((uint64_t)Mem[Dst+7]      ) & 0x00000000000000FF);
+	return Cargo;
+}
+
+
+//Specifically so I can read what's at a particular address
+uint64_t ReadQWord(int Dst)
+{
+    cout << "You are reading the memory at " << Dst << endl;
+    uint64_t Cargo = 0;
+    Cargo =   ((uint64_t)Mem[Dst+7] << 56)
+            | ((uint64_t)Mem[Dst+6] << 48)
+            | ((uint64_t)Mem[Dst+5] << 40)
+            | ((uint64_t)Mem[Dst+4] << 32)
+            | ((uint64_t)Mem[Dst+3] << 24)
+            | ((uint64_t)Mem[Dst+2] << 16)
+            | ((uint64_t)Mem[Dst+1] <<  8)
+            | ((uint64_t)Mem[Dst+0]);
+    return Cargo;
 }
 
 //A instructions
@@ -298,6 +383,57 @@ uint64_t SHRRegister(int Src, int Dst)
 	reg[Dst]=reg[Dst] >> reg[Src];
 	return reg[Dst];
 }
+
+
+
+
+
+
+//B instructions
+uint64_t RegisterToMemory(uint64_t instruction)
+{
+	//cout << "Instruction is " << hex << instruction << endl;
+	uint64_t temp = (instruction & 0xFFF0000000000000) >> 52;	
+	uint64_t S = (instruction & 0x000FF00000000000) >> 44;    //Source register
+	uint64_t D = (instruction & 0x00000FFFFFFFF000) >> 12;  //Memory destination
+	
+	int Src = S; //Just to match with the function call
+	int Dst = D; //I convert these to 32-bit
+	//cout << "S is " << hex << S << endl;
+	//cout << "D is " << hex << D << endl;
+	
+	uint64_t Reg2Mem = 0; //Whatever value was transferred to memory
+	
+	switch(temp)
+	{
+		case 0xB01:
+			printf("MOV register to memory detected! \n");
+			MOVReg2Mem(Src,Dst);
+			break;
+		default:
+			printf("Oops! Unimplemented instruction! \n");
+	}
+	return Reg2Mem;
+}
+
+uint64_t MOVReg2Mem(int Src, int Dst)
+{
+	WriteMem(Src, Dst);
+	return ReadMem(Src, Dst);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //D instructions
 uint64_t ImmediateToRegister(uint64_t instruction)

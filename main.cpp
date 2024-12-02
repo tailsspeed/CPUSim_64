@@ -13,16 +13,17 @@ uint64_t reg[256]; //Our registers
 //reg[0] should always be zero
 //reg[1] is the accumulator
 //reg[2] is base register
-//reg[3] is our program counter
+//reg[3] is our counter for things like loops
 //reg[4] is for data
 //reg[5] is for stack pointer
 //reg[6] is for stack base pointer
 //reg[7] is for destination index
 //reg[8] is for source index
-//reg[9] is for instruction pointer
+//reg[9] is for program counter/instruction pointer
 //reg[10] is for instruction register
+//reg[11] is for flags
 
-//No guarantee we'll use all these registers like this other than reg[0], reg[3] and maybe reg[5] and reg[6] 
+
 
 
 //Memory
@@ -85,6 +86,11 @@ uint64_t ORImmediate(uint64_t Imm, int Sel);  //0xD07
 uint64_t SHLImmediate(uint64_t Imm, int Sel); //0xD0A (I'm keeping the lower part of opcode the same as Reg2Reg for consistency)
 uint64_t SHRImmediate(uint64_t Imm, int Sel); //0xD0B
 
+
+//Jump related functions 0xE
+uint64_t JUMPStuff(uint64_t instruction);
+uint64_t JUMP(int Dst); //0xE01
+
 //void DumpRegs();
 void InitRegs();
 void ReportNonZero();
@@ -134,11 +140,12 @@ int main(int argc, char const *argv[])
         }
     }
     
-    while(reg[3]!=0xFFFFFFFFFFFFFFFF && reg[3]<Dst)
+    uint64_t Rez;
+    while(reg[255]!=1 && reg[9]<Dst)
     {
     	//Maybe use a register as another indication of when execution should stop
-    	Opcode(ReadMem(reg[3]));
-    	reg[3]=reg[3]+8;
+    	Rez=Opcode(ReadMem(reg[9]));
+    	reg[9]=reg[9]+8;
 	}
     
     CPU ts;
@@ -354,8 +361,8 @@ uint64_t RegisterToRegister(uint64_t instruction)
 			break;
 		case 0xA0C:
 			printf("HALT DETECTED!!!! \n");
+			reg[255]=1; //we'll make the first bit of this register to check for halting
 			Reg2Reg=0xDEAD;
-			reg[2]=0xFFFFFFFFFFFFFFFF;
 			break;
 		default:
 			printf("Oops! Unimplemented instruction! \n");
@@ -750,3 +757,31 @@ void LoadProgram(uint64_t Instruction, int Dst)
 	Mem[Dst+6] = l1;
 	Mem[Dst+7] = l0;
 }
+
+//E instrucitons
+uint64_t JUMPStuff(uint64_t instruction)
+{
+	uint64_t temp = (instruction & 0xFFF0000000000000) >> 52;
+	uint64_t Address = (instruction & 0xFFFFFFFF00000) >> 20;
+	
+	
+	uint64_t Jump=0xF00F; //Putting this as F00F to warn that something went wrong 
+	
+	switch(temp)
+	{
+		case 0xC01:
+			printf("JUMP detected! \n");
+			Jump=JUMP(Address);
+			break;
+		default:
+			printf("Oops! Unimplemented instruction! \n");
+	}
+	return Jump;
+}
+
+uint64_t JUMP(int Address)
+{
+	reg[9]=Address;
+	return reg[9];
+}
+

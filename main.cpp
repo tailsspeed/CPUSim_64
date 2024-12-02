@@ -10,14 +10,30 @@ using QWord = uint64_t;
 //Variables
 uint64_t reg[256]; //Our registers
 
+//reg[0] should always be zero
+//reg[1] is the accumulator
+//reg[2] is base register
+//reg[3] is our program counter
+//reg[4] is for data
+//reg[5] is for stack pointer
+//reg[6] is for stack base pointer
+//reg[7] is for destination index
+//reg[8] is for source index
+//reg[9] is for instruction pointer
+//reg[10] is for instruction register
+
+//No guarantee we'll use all these registers like this other than reg[0], reg[3] and maybe reg[5] and reg[6] 
+
+
 //Memory
 static constexpr uint64_t MAX_MEM = 0xFFFFFF; //Arbitrary amount of RAM. This is 16MB. Kept it low so it doesn't take long
 Byte* Mem = (Byte*)malloc(MAX_MEM);
 
+void LoadProgram(uint64_t instruction, int Dst); //Specifically to load lines of code into memory
 
 // using namespace std;
 
-uint64_t Opcode(string instruction);
+uint64_t Opcode(uint64_t instruction);
 
 //RegisterToRegister related functions 0xA
 uint64_t RegisterToRegister(uint64_t instruction);
@@ -36,11 +52,26 @@ uint64_t SHRRegister(int Src, int Dst); //0xA0B
 //RegisterToMemory related functions 0xB
 uint64_t RegisterToMemory(uint64_t instruction);
 void WriteMem(int Src, int Dst);
-uint64_t ReadMem(int Stc, int Dst);
+
+uint64_t ReadMem(int Dst);
 uint64_t ReadQWord(int Dst); //To check if I did it right
-uint64_t MOVReg2Mem(int Src, int Dst);
+
+uint64_t MOVReg2Mem(int Src, int Dst); //0xB01
+uint64_t ADDReg2Mem(int Src, int Dst); //0xB02
+uint64_t SUBReg2Mem(int Src, int Dst); //0xB03
+uint64_t MULReg2Mem(int Src, int Dst); //0xB04
+uint64_t DIVReg2Mem(int Src, int Dst); //0xB05
 
 //MemoryToRegister related functions 0xC
+uint64_t MemoryToRegister(uint64_t instruction);
+
+uint64_t MOVMem2Reg(int Src, int Dst);  //0xC01
+uint64_t ADDMem2Reg(int Src, int Dst);  //0xC02
+uint64_t SUBMem2Reg(int Src, int Dst);  //0xC03
+uint64_t MULMem2Reg(int Src, int Dst); //0xC04
+uint64_t DIVMem2Reg(int Src, int Dst); //0xC05
+
+
 
 //ImmediateToRegister related functions 0xD
 uint64_t ImmediateToRegister(uint64_t instruction); //Opcode D
@@ -82,9 +113,10 @@ int main(int argc, char const *argv[])
     }
     string line;
     /* FETCH */
+    int Dst=0; //Memory destination
     while (getline(in_stream, line))
     {
-        printf("length %lu\n", line.length());
+        //printf("length %lu\n", line.length());
         if (line.length() > 16)
         {
             // cout << line << " is not a valid instruction" << endl;
@@ -96,9 +128,19 @@ int main(int argc, char const *argv[])
 		}
         else
         {
-           Opcode(line); 
+           uint64_t temp = stoull(line, nullptr, 16);
+           LoadProgram(temp,Dst); 
+           Dst=Dst+8;
         }
     }
+    
+    while(reg[3]!=0xFFFFFFFFFFFFFFFF && reg[3]<Dst)
+    {
+    	//Maybe use a register as another indication of when execution should stop
+    	Opcode(ReadMem(reg[3]));
+    	reg[3]=reg[3]+8;
+	}
+    
     CPU ts;
     // ts.test_print();
     //DumpRegs();
@@ -106,12 +148,12 @@ int main(int argc, char const *argv[])
 
     in_stream.close();
     
-    cout <<  ReadQWord(0xFEED) << endl;
-    cout << "Damn! " << int(Mem[0xFEED]) << int(Mem[0xFEED+1]) << endl;
+    /*cout <<  ReadQWord(0xFEED) << endl;
+    cout << "Damn! " << int(Mem[0xFEED]) << int(Mem[0xFEED+1]) << endl;*/
     return 0;
 }
 
-uint64_t Opcode(string instruction)
+uint64_t Opcode(uint64_t temp)
 {
 	uint64_t OpcodeResult=0; //Result of whatever operation was done.
 			try
@@ -121,7 +163,7 @@ uint64_t Opcode(string instruction)
                     ex. terminate called after throwing an instance of 'std::invalid_argument'
                         what():  stoull
                  */
-                uint64_t temp = stoull(instruction, nullptr, 16);
+                
                 uint64_t full = temp; //Save the full instruction
                 /* DECODE */
                 uint64_t opcode = temp & 0xFFF0000000000000; // upper 12 bits
@@ -156,6 +198,7 @@ uint64_t Opcode(string instruction)
                         uint64_t src_mem = (temp << 12) >> 32;
                         uint64_t dest = (temp << 44) >> 56;
                         printf("Type: 0x%lX\n    Src Mem: 0x%lX\n    Dest: 0x%lX\n", inst_type, src_mem, dest);
+                        OpcodeResult=MemoryToRegister(full);
                     }
                     break;
                 case 0xD:
@@ -181,8 +224,8 @@ uint64_t Opcode(string instruction)
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << " - " << instruction <<" could not be converted or exceeds 64-bit range" << '\n';
-                // printf("%s could not be converted or exceeds 64-bit range\n", line.c_str());
+                std::cerr << e.what() << " - " << temp <<" cant be bothered to change this error " << '\n';
+                
             }
 	
 	return OpcodeResult;
@@ -210,7 +253,7 @@ void WriteMem(int Src, int Dst)
 	Mem[Dst+5] = l2;
 	Mem[Dst+6] = l1;
 	Mem[Dst+7] = l0;
-	cout << "We are messing with register " << hex << Src << endl;
+	/*cout << "We are messing with register " << hex << Src << endl;
 	cout << "Cargo is " << hex << Cargo << endl;
 	cout << "Mem0 is " << hex << int(Mem[Dst]) << endl;
 	cout << "Mem1 is " << hex << int(Mem[Dst+1]) << endl;
@@ -219,12 +262,12 @@ void WriteMem(int Src, int Dst)
 	cout << "Mem4 is " << hex << int(Mem[Dst+4]) << endl;
 	cout << "Mem5 is " << hex << int(Mem[Dst+5]) << endl;
 	cout << "Mem6 is " << hex << int(Mem[Dst+6]) << endl;
-	cout << "Mem7 is " << hex << int(Mem[Dst+7]) << endl;
+	cout << "Mem7 is " << hex << int(Mem[Dst+7]) << endl;*/
 }
 
-uint64_t ReadMem(int Src, int Dst)
+uint64_t ReadMem(int Dst)
 {
-	uint64_t Cargo = reg[Src];
+	uint64_t Cargo;
 	Cargo =   ((uint64_t)Mem[Dst+7] << 56)
             | ((uint64_t)Mem[Dst+6] << 48)
             | ((uint64_t)Mem[Dst+5] << 40)
@@ -262,7 +305,7 @@ uint64_t RegisterToRegister(uint64_t instruction)
 	int Dst = TheRest & 0xFF; //Destination
 	
 	
-	uint64_t Reg2Reg=0; //Whatever value was transferred to the register
+	uint64_t Reg2Reg=0xF00F; //Putting this as F00F to warn that something went wrong 
 	switch(temp)
 	{
 		case  0xA01:
@@ -308,6 +351,11 @@ uint64_t RegisterToRegister(uint64_t instruction)
 		case 0xA0B:
 			printf("SHR register \n");
 			Reg2Reg=SHRRegister(Src,Dst);
+			break;
+		case 0xA0C:
+			printf("HALT DETECTED!!!! \n");
+			Reg2Reg=0xDEAD;
+			reg[2]=0xFFFFFFFFFFFFFFFF;
 			break;
 		default:
 			printf("Oops! Unimplemented instruction! \n");
@@ -402,13 +450,25 @@ uint64_t RegisterToMemory(uint64_t instruction)
 	//cout << "S is " << hex << S << endl;
 	//cout << "D is " << hex << D << endl;
 	
-	uint64_t Reg2Mem = 0; //Whatever value was transferred to memory
+	uint64_t Reg2Mem = 0xF00F; //Putting this as F00F to warn that something went wrong 
 	
 	switch(temp)
 	{
 		case 0xB01:
 			printf("MOV register to memory detected! \n");
 			MOVReg2Mem(Src,Dst);
+			break;
+		case 0xB02:
+			printf("ADD reg2mem detected! \n");
+			ADDReg2Mem(Src,Dst);
+			break;
+		case 0xB03:
+			printf("SUB reg2mem detected! \n");
+			SUBReg2Mem(Src,Dst);
+			break;
+		case 0xB04:
+			printf("MUL reg2mem detected! \n");
+			MULReg2Mem(Src,Dst);
 			break;
 		default:
 			printf("Oops! Unimplemented instruction! \n");
@@ -419,21 +479,100 @@ uint64_t RegisterToMemory(uint64_t instruction)
 uint64_t MOVReg2Mem(int Src, int Dst)
 {
 	WriteMem(Src, Dst);
-	return ReadMem(Src, Dst);
+	return ReadMem(Dst);
+}
+
+uint64_t ADDReg2Mem(int Src, int Dst)
+{
+	reg[Src]=reg[Src]+ReadMem(Dst);
+	WriteMem(Src,Dst);
+	return ReadMem(Dst);
+}
+
+uint64_t SUBReg2Mem(int Src, int Dst)
+{
+	reg[Src]=reg[Src]-ReadMem(Dst);
+	WriteMem(Src,Dst);
+	return ReadMem(Dst);
+}
+
+uint64_t MULReg2Mem(int Src, int Dst)
+{
+	reg[Src]=reg[Src]*ReadMem(Dst);
+	WriteMem(Src,Dst);
+	return ReadMem(Dst);
+}
+
+//C instrucitons
+uint64_t MemoryToRegister(uint64_t instruction)
+{
+	uint64_t temp = (instruction & 0xFFF0000000000000) >> 52;
+	uint64_t TheRest = (instruction & 0x000FFFFFFFFFF000) >> 12;
+	
+	int Dst = TheRest & 0xFF; //Destination Registerr
+	int Mem = (TheRest & 0xFFFFFFFF00) >> 8; //Memory
+	
+	uint64_t Mem2Reg=0xF00F; //Putting this as F00F to warn that something went wrong 
+	
+	switch(temp)
+	{
+		case 0xC01:
+			printf("MOV mem2reg detected! \n");
+			MOVMem2Reg(Mem,Dst);
+			break;
+		case 0xC02:
+			printf("ADD mem2reg detected! \n");
+			ADDMem2Reg(Mem,Dst);
+			break;
+		case 0xC03:
+			printf("SUB mem2reg detected! \n");
+			SUBMem2Reg(Mem,Dst);
+			break; 
+		case 0xC04:
+			printf("MUL mem2reg detecte! \n");
+			MULMem2Reg(Mem,Dst);
+			break;
+		case 0xD04:
+			printf("DIV mem2reg detected! \n");
+			DIVMem2Reg(Mem,Dst);
+			break;
+		default:
+			printf("Oops! Unimplemented instruction! \n");
+	}
+	return Mem2Reg;
+}
+
+uint64_t MOVMem2Reg(int Meme, int Dst)
+{
+	reg[Dst]=ReadMem(Meme);
+	//cout << "The value of register " << Dst << " is " << reg[Dst] << endl;
+	return reg[Dst]; //Let's see if we got the right stuff
 }
 
 
+uint64_t ADDMem2Reg(int Meme, int Dst)
+{
+	reg[Dst]=ReadMem(Meme)+reg[Dst];
+	return reg[Dst];
+}
 
+uint64_t SUBMem2Reg(int Meme, int Dst)
+{
+	reg[Dst]=ReadMem(Meme)-reg[Dst];
+	return reg[Dst];
+}
 
+uint64_t MULMem2Reg(int Meme, int Dst)
+{
+	reg[Dst]=ReadMem(Meme)*reg[Dst];
+	return reg[Dst];
+}
 
-
-
-
-
-
-
-
-
+uint64_t DIVMem2Reg(int Meme, int Dst)
+{
+	reg[Dst]=ReadMem(Meme)/reg[Dst];
+	return reg[Dst];
+}
 
 //D instructions
 uint64_t ImmediateToRegister(uint64_t instruction)
@@ -446,7 +585,7 @@ uint64_t ImmediateToRegister(uint64_t instruction)
 	//cout << "The selected register is " << SelectedRegister << endl;
 	//cout << "The immediate is " << hex << Immediate << endl;
 	
-	uint64_t Imm2Reg=0; //Whatever value was transferred to the register
+	uint64_t Imm2Reg=0xF00F; //Putting this as F00F to warn that something went wrong 
 		
 	switch(temp)
 	{
@@ -586,4 +725,28 @@ void ReportNonZero()
 			cout << "Register " << hex << i << " has a value of " << reg[i] << endl;
 		}
 	}
+}
+
+void LoadProgram(uint64_t Instruction, int Dst)
+{
+	//This is the same as the WriteMem function except this time the Cargo 
+	//is the instruction itself
+	
+	Byte l7 = (Instruction >> 000) & 0xFF;  //Lol these are in octal. I found this off stack overflow.
+	Byte l6 = (Instruction >> 010) & 0xFF;  //Hex would work too but it's funny looking at this.
+	Byte l5 = (Instruction >> 020) & 0xFF;
+	Byte l4 = (Instruction >> 030) & 0xFF;
+	Byte l3 = (Instruction >> 040) & 0xFF;
+	Byte l2 = (Instruction >> 050) & 0xFF;
+	Byte l1 = (Instruction >> 060) & 0xFF;
+	Byte l0 = (Instruction >> 070) & 0xFF;
+	
+	Mem[Dst] = l7;
+	Mem[Dst+1] = l6;
+	Mem[Dst+2] = l5;
+	Mem[Dst+3] = l4;
+	Mem[Dst+4] = l3;
+	Mem[Dst+5] = l2;
+	Mem[Dst+6] = l1;
+	Mem[Dst+7] = l0;
 }

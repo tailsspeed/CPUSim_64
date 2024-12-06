@@ -23,7 +23,95 @@ uint64_t reg[256]; //Our registers
 //reg[10] is for instruction register
 //reg[255] is for flags
 
+/* Sample Functions for Set/Clear Flag Instructions */
+/* carry flag */
+void ClearCarryFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFFFFE;
+}
 
+void SetCarryFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000001;
+}
+
+void ComplementCarryFlag()
+{
+    reg[255] = reg[255] ^ 0x0000000000000001;
+}
+
+/* direction flag */
+void ClearDirectionFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFFBFF;
+}
+
+void SetDirectionFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000400;
+}
+
+/* interrupt flag */
+void ClearInterruptFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFFDFF;
+}
+
+void SetInterruptFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000200;
+}
+
+/* overflow flag */
+void SetOverflowFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000800;
+}
+
+void ClearOverflowFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFF7FF;
+}
+
+/* sign flag */
+void SetSignFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000080;
+}
+
+void ClearSignFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFFF7F;
+}
+
+/* zero flag */
+void SetZeroFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000040;
+}
+
+void ClearZeroFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFFFBF;
+}
+
+/* parity flag */
+void SetParityFlag()
+{
+    reg[255] = reg[255] | 0x0000000000000004;
+}
+
+void ClearParityFlag()
+{
+    reg[255] = reg[255] & 0xFFFFFFFFFFFFFFFB;
+}
+
+/* to be used in ALU logical operations */
+void SetZeroAndNegativeFlags(uint64_t Register)
+{
+	(Register == 0) ? SetZeroFlag() : ClearZeroFlag();
+	(Register & 0x8000000000000000) ? SetSignFlag() : ClearSignFlag(); // Bit 63
+}
 
 
 //Memory
@@ -381,60 +469,70 @@ uint64_t MOVRegister(int32_t Source, int32_t Destination)
 uint64_t ADDRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Src] + reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t SUBRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Src] - reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t MULRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Src] * reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t DIVRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Src] / reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t ANDRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Src] and reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];	
 }
 
 uint64_t ORRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Src] or reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t INC(int32_t Dst)
 {
 	reg[Dst]++;
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t DEC(int32_t Dst)
 {
 	reg[Dst]--;
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t SHLRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Dst] << reg[Src];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t SHRRegister(int32_t Src, int32_t Dst)
 {
 	reg[Dst] = reg[Dst] >> reg[Src];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
@@ -492,6 +590,7 @@ uint64_t ADDReg2Mem(int32_t Src, int32_t Dst)
 {
 	reg[Src] = reg[Src] + ReadMem(Dst);
 	WriteMem(Src, Dst);
+	SetZeroAndNegativeFlags(Dst);
 	return ReadMem(Dst);
 }
 
@@ -499,6 +598,7 @@ uint64_t SUBReg2Mem(int32_t Src, int32_t Dst)
 {
 	reg[Src] = reg[Src] - ReadMem(Dst);
 	WriteMem(Src, Dst);
+	SetZeroAndNegativeFlags(Dst);
 	return ReadMem(Dst);
 }
 
@@ -506,6 +606,15 @@ uint64_t MULReg2Mem(int32_t Src, int32_t Dst)
 {
 	reg[Src] = reg[Src] * ReadMem(Dst);
 	WriteMem(Src, Dst);
+	SetZeroAndNegativeFlags(Dst);
+	return ReadMem(Dst);
+}
+
+uint64_t DIVReg2Mem(int32_t Src, int32_t Dst)
+{
+	reg[Src] = reg[Src] / ReadMem(Dst);
+	WriteMem(Src, Dst);
+	SetZeroAndNegativeFlags(Dst);
 	return ReadMem(Dst);
 }
 
@@ -559,24 +668,28 @@ uint64_t MOVMem2Reg(int32_t Meme, int32_t Dst)
 uint64_t ADDMem2Reg(int32_t Meme, int32_t Dst)
 {
 	reg[Dst] = ReadMem(Meme) + reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t SUBMem2Reg(int32_t Meme, int32_t Dst)
 {
 	reg[Dst] = ReadMem(Meme) - reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t MULMem2Reg(int32_t Meme, int32_t Dst)
 {
 	reg[Dst] = ReadMem(Meme) * reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
 uint64_t DIVMem2Reg(int32_t Meme, int32_t Dst)
 {
 	reg[Dst] = ReadMem(Meme) / reg[Dst];
+	SetZeroAndNegativeFlags(reg[Dst]);
 	return reg[Dst];
 }
 
@@ -646,48 +759,56 @@ uint64_t MOVImmediate(uint64_t Imm, int32_t Sel)
 uint64_t ADDImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] + Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t SUBImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] - Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t MULImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] * Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t DIVImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] / Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t ANDImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] and Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t ORImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] or Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t SHLImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] << Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 
 uint64_t SHRImmediate(uint64_t Imm, int32_t Sel)
 {
 	reg[Sel] = reg[Sel] >> Imm;
+	SetZeroAndNegativeFlags(reg[Sel]);
 	return reg[Sel];
 }
 

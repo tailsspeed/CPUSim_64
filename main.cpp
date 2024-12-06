@@ -25,85 +25,85 @@ uint64_t reg[256]; //Our registers
 
 /* Sample Functions for Set/Clear Flag Instructions */
 /* carry flag */
-void ClearCarryFlag()
+void ClearCarryFlag()		// 0xF00
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFFFE;
 }
 
-void SetCarryFlag()
+void SetCarryFlag()			// 0xF01
 {
     reg[255] = reg[255] | 0x0000000000000001;
 }
 
-void ComplementCarryFlag()
+void ComplementCarryFlag()	// 0xF02
 {
     reg[255] = reg[255] ^ 0x0000000000000001;
 }
 
 /* direction flag */
-void ClearDirectionFlag()
+void ClearDirectionFlag()	// 0xF03
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFBFF;
 }
 
-void SetDirectionFlag()
+void SetDirectionFlag()		// 0xF04
 {
     reg[255] = reg[255] | 0x0000000000000400;
 }
 
 /* interrupt flag */
-void ClearInterruptFlag()
+void ClearInterruptFlag()	// 0xF05
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFDFF;
 }
 
-void SetInterruptFlag()
+void SetInterruptFlag()		// 0xF06
 {
     reg[255] = reg[255] | 0x0000000000000200;
 }
 
-/* overflow flag */
-void SetOverflowFlag()
-{
-    reg[255] = reg[255] | 0x0000000000000800;
-}
-
-void ClearOverflowFlag()
+void ClearOverflowFlag()	// 0xF07
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFF7FF;
 }
 
-/* sign flag */
-void SetSignFlag()
+/* overflow flag */
+void SetOverflowFlag()		// 0xF08
 {
-    reg[255] = reg[255] | 0x0000000000000080;
+    reg[255] = reg[255] | 0x0000000000000800;
 }
 
-void ClearSignFlag()
+void ClearSignFlag()		// 0xF09
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFF7F;
 }
 
-/* zero flag */
-void SetZeroFlag()
+/* sign flag */
+void SetSignFlag()			// 0xF0A
 {
-    reg[255] = reg[255] | 0x0000000000000040;
+    reg[255] = reg[255] | 0x0000000000000080;
 }
 
-void ClearZeroFlag()
+void ClearZeroFlag()		// 0xF0B
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFFBF;
 }
 
-/* parity flag */
-void SetParityFlag()
+/* zero flag */
+void SetZeroFlag()			// 0xF0C
 {
-    reg[255] = reg[255] | 0x0000000000000004;
+    reg[255] = reg[255] | 0x0000000000000040;
 }
 
-void ClearParityFlag()
+void ClearParityFlag()		// 0xF0D
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFFFB;
+}
+
+/* parity flag */
+void SetParityFlag()		// 0xF0E
+{
+    reg[255] = reg[255] | 0x0000000000000004;
 }
 
 /* to be used in ALU logical operations */
@@ -178,6 +178,9 @@ uint64_t SHRImmediate(uint64_t Imm, int32_t Sel); 	//0xD0B
 //Jump related functions 0xE
 uint64_t JUMPStuff(uint64_t instruction);
 uint64_t JUMP(int32_t Dst); 						//0xE01
+
+// Set/Clear Flag Instructions
+void Flags(uint64_t instruction);					//0xFXX
 
 //void DumpRegs();
 void InitRegs();
@@ -311,6 +314,12 @@ uint64_t Opcode(uint64_t temp)
                         printf("Type: 0x%lX\n    Addr: 0x%lX\n", inst_type, addr);
                     }
                     break;
+				case 0xF:
+					{
+						printf("Flag 0x%lX\n", temp);
+						Flags(temp);
+					}
+					break;
                 default:
                     printf("Invalid format\n");
                     break;
@@ -905,3 +914,44 @@ uint64_t JUMP(int32_t Address)
 	return reg[9];
 }
 
+//F instructions
+void Flags(uint64_t instruction)
+{
+	uint64_t temp = (instruction & 0xFFF0000000000000) >> 52;
+	switch (temp)
+	{
+	case 0xF00: ClearCarryFlag();
+		break;
+	case 0xF01: SetCarryFlag();
+		break;
+	case 0xF02: ComplementCarryFlag();
+		break;
+	case 0xF03: ClearDirectionFlag();
+		break;
+	case 0xF04: SetDirectionFlag();
+		break;
+	case 0xF05: ClearInterruptFlag();
+		break;
+	case 0xF06: SetInterruptFlag();
+		break;
+	case 0xF07: ClearOverflowFlag();
+		break;
+	case 0xF08: SetOverflowFlag();
+		break;
+	case 0xF09: ClearSignFlag();
+		break;
+	case 0xF0A: SetSignFlag();
+		break;
+	case 0xF0B: ClearZeroFlag();
+		break;
+	case 0xF0C: SetZeroFlag();
+		break;
+	case 0xF0D: ClearParityFlag();
+		break;
+	case 0xF0E: SetParityFlag();
+		break;
+	default:
+		printf("Invalid flag format\n");
+		break;
+	}
+}

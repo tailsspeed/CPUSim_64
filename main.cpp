@@ -25,83 +25,83 @@ uint64_t reg[256]; //Our registers
 
 /* Sample Functions for Set/Clear Flag Instructions */
 /* carry flag */
-void ClearCarryFlag()		// 0xF00
+void ClearCarryFlag()		// 0xF01
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFFFE;
 }
 
-void SetCarryFlag()			// 0xF01
+void SetCarryFlag()			// 0xF02
 {
     reg[255] = reg[255] | 0x0000000000000001;
 }
 
-void ComplementCarryFlag()	// 0xF02
+void ComplementCarryFlag()	// 0xF03
 {
     reg[255] = reg[255] ^ 0x0000000000000001;
 }
 
 /* direction flag */
-void ClearDirectionFlag()	// 0xF03
+void ClearDirectionFlag()	// 0xF04
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFBFF;
 }
 
-void SetDirectionFlag()		// 0xF04
+void SetDirectionFlag()		// 0xF05
 {
     reg[255] = reg[255] | 0x0000000000000400;
 }
 
 /* interrupt flag */
-void ClearInterruptFlag()	// 0xF05
+void ClearInterruptFlag()	// 0xF06
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFDFF;
 }
 
-void SetInterruptFlag()		// 0xF06
+void SetInterruptFlag()		// 0xF07
 {
     reg[255] = reg[255] | 0x0000000000000200;
 }
 
-void ClearOverflowFlag()	// 0xF07
+void ClearOverflowFlag()	// 0xF08
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFF7FF;
 }
 
 /* overflow flag */
-void SetOverflowFlag()		// 0xF08
+void SetOverflowFlag()		// 0xF09
 {
     reg[255] = reg[255] | 0x0000000000000800;
 }
 
-void ClearSignFlag()		// 0xF09
+void ClearSignFlag()		// 0xF0A
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFF7F;
 }
 
 /* sign flag */
-void SetSignFlag()			// 0xF0A
+void SetSignFlag()			// 0xF0B
 {
     reg[255] = reg[255] | 0x0000000000000080;
 }
 
-void ClearZeroFlag()		// 0xF0B
+void ClearZeroFlag()		// 0xF0C
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFFBF;
 }
 
 /* zero flag */
-void SetZeroFlag()			// 0xF0C
+void SetZeroFlag()			// 0xF0D
 {
     reg[255] = reg[255] | 0x0000000000000040;
 }
 
-void ClearParityFlag()		// 0xF0D
+void ClearParityFlag()		// 0xF0E
 {
     reg[255] = reg[255] & 0xFFFFFFFFFFFFFFFB;
 }
 
 /* parity flag */
-void SetParityFlag()		// 0xF0E
+void SetParityFlag()		// 0xF0F
 {
     reg[255] = reg[255] | 0x0000000000000004;
 }
@@ -232,7 +232,7 @@ int main(int argc, char const *argv[])
     }
     
     uint64_t Rez;
-    while(reg[255]!= 1 && reg[9] < Dst)
+    while(((reg[255] >> 15) != 1) && reg[9] < Dst) // checks if Bit 15 is set--indicates HALT
     {
     	//Maybe use a register as another indication of when execution should stop
     	Rez = Opcode(ReadMem(reg[9]));
@@ -457,7 +457,8 @@ uint64_t RegisterToRegister(uint64_t instruction)
 			break;
 		case 0xA0C:
 			printf("HALT DETECTED!!!! \n");
-			reg[255] = 1; //we'll make the first bit of this register to check for halting
+			reg[255] = reg[255] | 0x0000000000008000; // set bit 15 instead for HALT
+			// reg[255] = 1; //we'll make the first bit of this register to check for halting
 			Reg2Reg = 0xDEAD;
 			break;
 		default:
@@ -920,35 +921,35 @@ void Flags(uint64_t instruction)
 	uint64_t temp = (instruction & 0xFFF0000000000000) >> 52;
 	switch (temp)
 	{
-	case 0xF00: ClearCarryFlag();
+	case 0xF01: ClearCarryFlag();
 		break;
-	case 0xF01: SetCarryFlag();
+	case 0xF02: SetCarryFlag();
 		break;
-	case 0xF02: ComplementCarryFlag();
+	case 0xF03: ComplementCarryFlag();
 		break;
-	case 0xF03: ClearDirectionFlag();
+	case 0xF04: ClearDirectionFlag();
 		break;
-	case 0xF04: SetDirectionFlag();
+	case 0xF05: SetDirectionFlag();
 		break;
-	case 0xF05: ClearInterruptFlag();
+	case 0xF06: ClearInterruptFlag();
 		break;
-	case 0xF06: SetInterruptFlag();
+	case 0xF07: SetInterruptFlag();
 		break;
-	case 0xF07: ClearOverflowFlag();
+	case 0xF08: ClearOverflowFlag();
 		break;
-	case 0xF08: SetOverflowFlag();
+	case 0xF09: SetOverflowFlag();
 		break;
-	case 0xF09: ClearSignFlag();
+	case 0xF0A: ClearSignFlag();
 		break;
-	case 0xF0A: SetSignFlag();
+	case 0xF0B: SetSignFlag();
 		break;
-	case 0xF0B: ClearZeroFlag();
+	case 0xF0C: ClearZeroFlag();
 		break;
-	case 0xF0C: SetZeroFlag();
+	case 0xF0D: SetZeroFlag();
 		break;
-	case 0xF0D: ClearParityFlag();
+	case 0xF0E: ClearParityFlag();
 		break;
-	case 0xF0E: SetParityFlag();
+	case 0xF0F: SetParityFlag();
 		break;
 	default:
 		printf("Invalid flag format\n");

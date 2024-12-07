@@ -899,7 +899,7 @@ uint64_t JUMPStuff(uint64_t instruction)
 	
 	switch(temp)
 	{
-		case 0xC01:
+		case 0xE01:
 			printf("JUMP detected! \n");
 			Jump = JUMP(Address);
 			break;

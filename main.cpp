@@ -113,6 +113,12 @@ void SetZeroAndNegativeFlags(uint64_t Register)
 	(Register & 0x8000000000000000) ? SetSignFlag() : ClearSignFlag(); // Bit 63
 }
 
+/* to be used in ALU arithmetic, comparison, and shifts */
+void SetCarryFlags(uint64_t Register)
+{
+	(Register > 0xFFFFFFFFFFFFFFFF) ? SetCarryFlag() : ClearCarryFlag();
+}
+
 
 //Memory
 static constexpr uint64_t MAX_MEM = 0xFFFFFF; //Arbitrary amount of RAM. This is 16MB. Kept it low so it doesn't take long
